@@ -69,9 +69,20 @@ data types.
 to build and install the library:
 
 ```
+# creates a shared library
 meson setup --buildtype release builddir && cd builddir
 meson compile
 sudo meson install
+
+# Creates a shared library exporting solely a C api and display verbose output
+# It exports a reduced set of functions (qelect, qsort, partial_qsort, keyvalue_sort) for a reduced set of types (int32, uint32, int64, uint64, float, double)
+meson setup --buildtype release builddir -Dlib_type=shared_conly
+meson compile -C builddir -v
+
+# Creates a self-contained shared library compatible with MSVC exporting solely a C api (compiled via mingw-gcc)
+# It exports a reduced set of functions (qelect, qsort, partial_qsort, keyvalue_sort) for a reduced set of types (int32, uint32, int64, uint64, float, double)
+meson setup --buildtype release builddir -Dlib_type=shared_conly --cross-file mingw-cross.txt
+meson compile -C builddir -v
 ```
 
 Once installed, you can use `pkg-config --cflags --libs x86simdsortcpp` to

@@ -1,10 +1,18 @@
 #include "c-api-headers.h"
 
 #ifdef XSS_EXPORTING
-#	define XSS_C_EXPORT __attribute__((visibility("default")))
+#	if defined(__MINGW64__)
+#		define XSS_C_EXPORT __declspec(dllexport)
+#	else
+#		define XSS_C_EXPORT __attribute__((visibility("default")))
+#	endif
 #	define XSS_C_BODY(body) { try { body; return true; } catch(...) { return false; } }
 #else
-#	define XSS_C_EXPORT
+#	if defined(_MSC_VER) || defined(__MINGW64__)
+#		define XSS_C_EXPORT __declspec(dllimport)
+#	else
+#		define XSS_C_EXPORT
+#	endif
 #	define XSS_C_BODY(body) ;
 #endif
 
