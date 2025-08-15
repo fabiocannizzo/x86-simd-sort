@@ -38,7 +38,7 @@
 #define UNUSED(x) (void)(x)
 
 /* Compiler specific macros specific */
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 #define X86_SIMD_SORT_INLINE_ONLY inline
 #define X86_SIMD_SORT_INLINE static inline
 #define X86_SIMD_SORT_FINLINE static __forceinline

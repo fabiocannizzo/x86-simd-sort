@@ -57,6 +57,17 @@ if get_option('lib_type') == 'shared'
                              install : true,
                              soversion : 1,
                             )
+elif get_option('lib_type') == 'shared_conly'
+  libsimdsort = shared_library('x86simdsortcpp',
+    'lib/x86simdsort.cpp',
+    include_directories : [src, utils, lib],
+    link_with : [libtargets],
+    dependencies: [omp_dep],
+    gnu_symbol_visibility : 'inlineshidden',
+    install : true,
+    soversion : 1,
+    cpp_args : ['-fvisibility=hidden', '-DC_API_ONLY']
+  )
 else
   libsimdsort = static_library('x86simdsortcpp',
                              'lib/x86simdsort.cpp',

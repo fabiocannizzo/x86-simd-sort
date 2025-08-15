@@ -1,0 +1,26 @@
+#include "c-api-headers.h"
+
+#ifdef XSS_EXPORTING
+#	define XSS_C_EXPORT __attribute__((visibility("default")))
+#	define XSS_C_BODY(body) { try { body; return true; } catch(...) { return false; } }
+#else
+#	define XSS_C_EXPORT
+#	define XSS_C_BODY(body) ;
+#endif
+
+#define XSS_XI1(n,t) XSS_C_EXPORT XSS_QSORT_HEADER_INT(n,t) XSS_C_BODY( x86simdsort::qsort(ar, size, false, true) )
+#define XSS_XF1(n,t) XSS_C_EXPORT XSS_QSORT_HEADER_FLT(n,t) XSS_C_BODY( x86simdsort::qsort(ar, size, hasnan, true) )
+#include "x-macro1.h"
+
+#define XSS_XI1(n,t) XSS_C_EXPORT XSS_QSELECT_HEADER_INT(n,t) XSS_C_BODY( x86simdsort::qselect(ar, k, size, false, true) )
+#define XSS_XF1(n,t) XSS_C_EXPORT XSS_QSELECT_HEADER_FLT(n,t) XSS_C_BODY( x86simdsort::qselect(ar, k, size, hasnan, true) )
+#include "x-macro1.h"
+
+#define XSS_XI1(n,t) XSS_C_EXPORT XSS_QPSORT_HEADER_INT(n,t) XSS_C_BODY( x86simdsort::partial_qsort(ar, k, size, false, true) )
+#define XSS_XF1(n,t) XSS_C_EXPORT XSS_QPSORT_HEADER_FLT(n,t) XSS_C_BODY( x86simdsort::partial_qsort(ar, k, size, hasnan, true) )
+#include "x-macro1.h"
+
+#define XSS_XI2(n1,t1, n2,t2) XSS_C_EXPORT XSS_QKVSORT_HEADER_INT(n1,t1,n2,t2) XSS_C_BODY(x86simdsort::keyvalue_qsort(keys, vals, size, false, true))
+#define XSS_XF2(n1,t1, n2,t2) XSS_C_EXPORT XSS_QKVSORT_HEADER_FLT(n1,t1,n2,t2) XSS_C_BODY(x86simdsort::keyvalue_qsort(keys, vals, size, hasnan, true))
+#include "x-macro2.h"
+
