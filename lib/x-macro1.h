@@ -1,4 +1,3 @@
-// Type your code here, or load an example.
 
 #ifndef XSS_XI1
 #	error XSS_XI1 must be defined

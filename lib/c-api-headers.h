@@ -14,3 +14,4 @@
 
 #define XSS_QKVSORT_HEADER_INT(n1,t1,n2,t2)   bool XSS_C_EXP_NAME2(keyvalue_qsort, n1, n2)(t1 *keys, t2* vals, uint64_t size, bool ascending)
 #define XSS_QKVSORT_HEADER_FLT(n1,t1,n2,t2)   bool XSS_C_EXP_NAME2(keyvalue_qsort, n1, n2)(t1 *keys, t2* vals, uint64_t size, bool hasnan, bool ascending)
+
