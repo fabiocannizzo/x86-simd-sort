@@ -8,11 +8,7 @@
 #	endif
 #	define XSS_C_BODY(body) { try { body; return true; } catch(...) { return false; } }
 #else
-#	if defined(_MSC_VER) || defined(__MINGW64__)
-#		define XSS_C_EXPORT __declspec(dllimport)
-#	else
-#		define XSS_C_EXPORT
-#	endif
+#	define XSS_C_EXPORT XSS_DLL_IMPORT
 #	define XSS_C_BODY(body) ;
 #endif
 

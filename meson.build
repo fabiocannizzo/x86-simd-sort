@@ -48,14 +48,6 @@ cancompilefp16 = cpp.compiles(fp16code, args:'-march=sapphirerapids')
 
 subdir('lib')
 
-c_api_ver = custom_target(
-  'c_api_ver',
-  output: 'x86simdsort.ver',
-  command: [
-    'sh', '-c',
-    'cpp ../lib/c-api-ver.h | sed "/^#/d; /^$/d; s/^c_xss/    c_xss/" > @OUTPUT@'
-  ],
-)
 
 if get_option('lib_type') == 'shared'
   libsimdsort = shared_library('x86simdsortcpp',
@@ -68,9 +60,18 @@ if get_option('lib_type') == 'shared'
                              soversion : 1,
                             )
 elif get_option('lib_type') == 'shared_conly'
+	c_api_header = custom_target(
+	  'c_api_header',
+	  input: 'lib/x86simdsort-gen-c-api.h',
+	  output: 'x86simdsort-c-api.h',
+	  command: [
+		'sh', '-c',
+		'cpp -P @INPUT@ | sed -f ../lib/mk-c-api.sed > x86simdsort-c-api.h'
+	  ],
+	)
 	c_api_link_args = []
 	c_api_cpp_args = ['-DC_API_ONLY']
-	c_api_deps = []
+	c_api_deps = [c_api_header]
 	if meson.is_cross_build() and host_machine.system() == 'windows'
 		message('This is a cross build with MinGW-GCC')
 		c_api_link_args += ['-Wl,--output-def=libx86simdsortcpp.dll.def']
@@ -78,6 +79,14 @@ elif get_option('lib_type') == 'shared_conly'
 		c_api_link_args += ['-static-libgcc', '-static-libstdc++']
 	else
 		message('This is a native Linux build with GCC')
+		c_api_ver = custom_target(
+			'c_api_ver',
+			output: 'x86simdsort.ver',
+			command: [
+			'sh', '-c',
+			'cpp -P ../lib/c-api-ver.h | sed "/^$/d; s/^c_xss/    c_xss/" > @OUTPUT@'
+			],
+		)
 		c_api_link_args += ['-Wl,--version-script=' + c_api_ver.full_path()]
 		c_api_cpp_args += ['-fvisibility=hidden']
 		c_api_deps += c_api_ver
