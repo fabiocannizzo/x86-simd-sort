@@ -67,6 +67,10 @@ $(info Compiler: $(shell $(CXX) --version | head -n1))
 # Check if configuration changed, if so, clean
 CONFIGFILE := config.cfg
 CONFIG := $(CXX)-$(TARGET)-$(if $(DEBUG),DEBUG,RELEASE)
+$(info CONFIG: $(CONFIG))
+# Configuration file generation
+$(shell echo "$(CONFIG)" | cmp -s - $(CONFIGFILE) 2>/dev/null || echo "$(CONFIG)" > $(CONFIGFILE))
+
 
 # Source and header files
 SRC_HEADERS := $(wildcard ../src/*.h) $(wildcard ../src/*.hpp)
@@ -77,12 +81,27 @@ ALL_HEADERS := $(UTIL_HEADERS) $(SRC_HEADERS) $(LIB_HEADERS)
 LIB_SOURCES := $(wildcard ../lib/$(NAME)-*.cpp)
 LIB_OBJECTS := $(LIB_SOURCES:../lib/$(NAME)-%.cpp=$(NAME)-%.cpp.o)
 
+HASH := $(shell git log -n1 --pretty="%cd-%h" --date=format:%y%m%d)
+ARTIFACTDIR := $(NAME)-$(HASH)
 
 EXTRADEPS := Makefile $(CONFIGFILE)
 
-.PHONY: clean default all lib api smoke
+.PHONY: clean default all lib api smoke artifacts
 
 default : lib api
+
+artifacts: lib api
+ifeq ($(TARGET),DLL)
+	mkdir -p artifacts/$(ARTIFACTDIR)
+	cp *.{h,dll,lib} artifacts/$(ARTIFACTDIR)/
+	cd artifacts && zip -r $(ARTIFACTDIR).zip $(ARTIFACTDIR)
+else
+	mkdir -p artifacts/$(ARTIFACTDIR)
+	cp make-c-api/*.{h,so} artifacts/$(ARTIFACTDIR)/
+	cd artifacts && tar -czvf $(ARTIFACTDIR).tgz $(ARTIFACTDIR)
+	cd artifacts && tar -cJvf $(ARTIFACTDIR).tar.xz $(ARTIFACTDIR)
+endif
+
 
 lib : $(LIBNAME).$(SHARED_EXT)
 api : $(NAME)-c-api.h
@@ -107,10 +126,6 @@ smoke.cpp.o : $(NAME)-c-api.h
 
 VPATH=../lib:.
 
-# Configuration file generation
-$(CONFIGFILE):
-	@echo "$(CONFIG)" | cmp -s - $@ 2>/dev/null || echo "$(CONFIG)" > $@
-
 # Object files (note that CXXFLAGS set above is customized for each target)
 %.cpp.o: %.cpp $(ALL_HEADERS) $(EXTRADEPS)
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
@@ -133,4 +148,4 @@ $(LIBNAME).$(SHARED_EXT): $(NAME).cpp.o $(LIB_OBJECTS) $(VERDEP) $(EXTRADEPS)
 
 
 clean:
-	rm -f *.o *.so *.dll *.lib *.h *.ver *.exe *.cfg
+	rm -rf *.o *.so *.dll *.lib *.h *.ver *.exe *.cfg artifacts
