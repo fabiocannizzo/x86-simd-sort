@@ -21,6 +21,7 @@ UNAME := $(shell uname)
 $(info UNAME: $(UNAME))
 CYGWIN := 0
 MINGW := 0
+LINUX := 0
 
 ifneq (,$(filter CYGWIN%,$(UNAME)))
    CYGWIN := 1
@@ -28,6 +29,8 @@ ifneq (,$(filter CYGWIN%,$(UNAME)))
 else ifneq (,$(filter MINGW64%,$(UNAME)))
    MINGW := 1
    $(info Detected Mingw)
+else ifneq (,$(filter Linux%,$(UNAME)))
+   LINUX := 1
 endif
 
 ifeq ($(TARGET),DLL)
@@ -38,8 +41,11 @@ ifeq ($(TARGET),DLL)
        CXX := x86_64-w64-mingw32-clang++
     else ifeq ($(MINGW),1)
        CXX := clang++
+    else ifeq ($(LINUX),1)
+       CXX := clang++
+       CXXFLAGS += --target=x86_64-w64-mingw32
     else
-        $(error DLL cross compilation supported only on CYGWIN or MINGW64)
+        $(error DLL cross compilation supported on CYGWIN (with x86_64-w64-mingw32-clang++), MINGW64 (with clang++ and mingw) and Linux (with clang++ and mingw))
     endif
     SHARED_EXT := dll
     LIBNAME := $(NAME)-c-api
