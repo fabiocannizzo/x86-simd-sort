@@ -28,6 +28,7 @@ jobs:
 
       - name: Build (Windows cross-compile DLL)
         run: |
+          find /usr -name iostream -type f
           cd make-c-api
           make all -j2 TARGET=DLL
 
