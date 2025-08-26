@@ -19,39 +19,40 @@ NAME := x86simdsort
 
 UNAME := $(shell uname)
 $(info UNAME: $(UNAME))
+CYGWIN := 0
+MINGW := 0
 
-ifneq (,$(filter CYGWIN% MINGW64%,$(UNAME)))
+ifneq (,$(filter CYGWIN%,$(UNAME)))
    CYGWIN := 1
-else
-   CYGWIN := 0
+   $(info Detected Cygwin)
+else ifneq (,$(filter MINGW%,$(UNAME)))
+   MINGW := 0
+   $(info Detected MinGW)
 endif
-$(info IsCygwin: $(CYGWIN))
 
 ifeq ($(TARGET),DLL)
-    # There ia a bug in gcc when the target is the Windows ABI and a function call another function passing by value avx registers, hence we use clang
+    # We prefer CLANG, because there ia a bug in gcc when the target is the Windows ABI
+    # A function call passing by value AVX registers segfaults
     # https://github.com/mingw-w64/mingw-w64/issues/115
-#   CXX := x86_64-w64-mingw32-g++
     ifeq ($(CYGWIN),1)
-       # There ia a bug in gcc when the target is the Windows ABI and a function call another function passing by value avx registers, hence we use clang
-       # https://github.com/mingw-w64/mingw-w64/issues/115
        CXX := x86_64-w64-mingw32-clang++
-       $(info Using: clang on Cygwin)
+    else ifeq ($(MINGW),1)
+       CXX := clang++
     else
-       CXX := clang++ -target x86_64-w64-mingw32
+        $(error DLL cross compilation supported only on CYGWIN or MINGW)
     endif
     SHARED_EXT := dll
     LIBNAME := $(NAME)-c-api
     DLLLINK := $(LIBNAME).$(SHARED_EXT).lib
     STATIC := -static-libstdc++ -static -lpthread -static -pthread
     LDFLAGS := -shared -static-libgcc $(STATIC) -Wl,--out-implib,$(DLLLINK)
-#    LDFLAGS += -fsanitize=address,undefined
     SONAME_FLAG :=
 else
     ifeq ($(CYGWIN),1)
-       # There ia a bug in gcc when the target is the Windows ABI and a function call another function passing by value avx registers, hence we use clang
+       # We prefer CLANG, because there ia a bug in gcc when the target is the Windows ABI
+       # A function call passing by value AVX registers segfaults
        # https://github.com/mingw-w64/mingw-w64/issues/115
        CXX := clang++
-       $(info Using: clang on Cygwin)
     else
        CXX := g++
     endif
@@ -65,6 +66,7 @@ else
     DLLLINK := $(LIBNAME).$(SHARED_EXT)
 endif
 
+$(info CXX: $(CXX))
 $(info Compiler: $(shell $(CXX) --version | head -n1))
 
 # Check if configuration changed, if so, clean
@@ -84,27 +86,11 @@ ALL_HEADERS := $(UTIL_HEADERS) $(SRC_HEADERS) $(LIB_HEADERS)
 LIB_SOURCES := $(wildcard ../lib/$(NAME)-*.cpp)
 LIB_OBJECTS := $(LIB_SOURCES:../lib/$(NAME)-%.cpp=$(NAME)-%.cpp.o)
 
-HASH := $(shell git log -n1 --pretty="%cd-%h" --date=format:%y%m%d)
-ARTIFACTDIR := $(NAME)-$(HASH)
-
 EXTRADEPS := Makefile $(CONFIGFILE)
 
-.PHONY: clean default all lib api smoke artifacts
+.PHONY: clean default all lib api smoke
 
 default : lib api
-
-artifacts: lib api
-ifeq ($(TARGET),DLL)
-	mkdir -p artifacts/$(ARTIFACTDIR)
-	cp *.{h,dll,lib} artifacts/$(ARTIFACTDIR)/
-	cd artifacts && zip -r $(ARTIFACTDIR).zip $(ARTIFACTDIR)
-else
-	mkdir -p artifacts/$(ARTIFACTDIR)
-	cp make-c-api/*.{h,so} artifacts/$(ARTIFACTDIR)/
-	cd artifacts && tar -czvf $(ARTIFACTDIR).tgz $(ARTIFACTDIR)
-	cd artifacts && tar -cJvf $(ARTIFACTDIR).tar.xz $(ARTIFACTDIR)
-endif
-
 
 lib : $(LIBNAME).$(SHARED_EXT)
 api : $(NAME)-c-api.h
@@ -151,4 +137,4 @@ $(LIBNAME).$(SHARED_EXT): $(NAME).cpp.o $(LIB_OBJECTS) $(VERDEP) $(EXTRADEPS)
 
 
 clean:
-	rm -rf *.o *.so *.dll *.lib *.h *.ver *.exe *.cfg artifacts
+	rm -rf *.o *.so *.dll *.lib *.h *.ver *.exe *.cfg
