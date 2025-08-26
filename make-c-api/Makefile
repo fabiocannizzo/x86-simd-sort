@@ -25,8 +25,8 @@ MINGW := 0
 ifneq (,$(filter CYGWIN%,$(UNAME)))
    CYGWIN := 1
    $(info Detected Cygwin)
-else ifneq (,$(filter MINGW%,$(UNAME)))
-   MINGW := 0
+else ifneq (,$(filter MINGW64%,$(UNAME)))
+   MINGW := 1
    $(info Detected Mingw)
 endif
 
@@ -39,7 +39,7 @@ ifeq ($(TARGET),DLL)
     else ifeq ($(MINGW),1)
        CXX := clang++
     else
-        $(error DLL cross compilation supported only on CYGWIN or MINGW)
+        $(error DLL cross compilation supported only on CYGWIN or MINGW64)
     endif
     SHARED_EXT := dll
     LIBNAME := $(NAME)-c-api
