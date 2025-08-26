@@ -17,7 +17,10 @@ CXXLIBFLAGS := -I../lib -I../src -I../utils -fvisibility=hidden -fvisibility-inl
 
 NAME := x86simdsort
 
-ifeq ($(findstring CYGWIN,$(shell uname)),CYGWIN)
+UNAME := $(shell uname)
+$(info UNAME: $(UNAME))
+
+ifneq (,$(filter CYGWIN% MINGW64%,$(UNAME)))
    CYGWIN := 1
 else
    CYGWIN := 0
