@@ -8,7 +8,8 @@ CXXFLAGS := -Wall -std=c++20 -fdiagnostics-color=always
 
 # Debug/release selection
 ifeq ($(DEBUG),1)
-    CXXFLAGS += -DDEBUG -D_GLIBCXX_ASSERTIONS=1 -g -O0
+    CXXFLAGS += -g -O0 -DDEBUG -D_GLIBCXX_ASSERTIONS=1 -D_GLIBCXX_DEBUG
+
 else
     CXXFLAGS += -O3
 endif
@@ -25,11 +26,12 @@ LINUX := 0
 
 ifneq (,$(filter CYGWIN%,$(UNAME)))
    CYGWIN := 1
-   $(info Detected Cygwin)
+   $(info Host OS: Cygwin)
 else ifneq (,$(filter MINGW64%,$(UNAME)))
    MINGW := 1
-   $(info Detected Mingw)
+   $(info Host OS: Mingw)
 else ifneq (,$(filter Linux%,$(UNAME)))
+   $(info Host OS: Linux)
    LINUX := 1
 endif
 
@@ -42,8 +44,9 @@ ifeq ($(TARGET),DLL)
     else ifeq ($(MINGW),1)
        CXX := clang++
     else ifeq ($(LINUX),1)
-       CXX := clang++
-       CXXFLAGS += --target=x86_64-w64-mingw32
+       CXX := clang++ --target=x86_64-w64-mingw32
+       STLINCLDIR := $(shell find /usr/x86_64-w64-mingw32/ -regex ".*/[0-9.]*/iostream" -type f | sed 's:/iostream$$::')
+       CXXFLAGS += --sysroot=/usr/x86_64-w64-mingw32 -isystem $(STLINCLDIR) -isystem $(STLINCLDIR)/x86_64-w64-mingw32 -isystem $(STLINCLDIR)/backward
     else
         $(error DLL cross compilation supported on CYGWIN (with x86_64-w64-mingw32-clang++), MINGW64 (with clang++ and mingw) and Linux (with clang++ and mingw))
     endif
