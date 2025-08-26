@@ -27,7 +27,7 @@ ifneq (,$(filter CYGWIN%,$(UNAME)))
    $(info Detected Cygwin)
 else ifneq (,$(filter MINGW%,$(UNAME)))
    MINGW := 0
-   $(info Detected MinGW)
+   $(info Detected Mingw)
 endif
 
 ifeq ($(TARGET),DLL)
