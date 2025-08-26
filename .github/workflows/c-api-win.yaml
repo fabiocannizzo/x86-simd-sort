@@ -33,11 +33,13 @@ jobs:
 
       - name: Package (Windows)
         run: |
-          cd make-c-api
-          make artifacts TARGET=DLL
+          mkdir -p artifacts/${NAME}
+          cp make-c-api/*.{lib,dll,h} artifacts/${NAME}/
+          cd artifacts
+          zip -r ${NAME}-${GITHUB_SHA::8}.zip ${NAME}
 
       - name: Upload artifacts (Windows)
         uses: actions/upload-artifact@v4
         with:
           name: c-api-windows-build
-          path: make-c-api/artifacts/*.zip
+          path: artifacts/*.zip
