@@ -1,32 +1,31 @@
 COMMENT This is an auto-generated file
 COMMENT This header is intended to be used for shared libraries (so or dll) compiled to the shared_c_api target
 
-PRAGMA pragma once
+PRAGMA ifndef __X86_SIMD_SORT_C_API_H__
+PRAGMA define __X86_SIMD_SORT_C_API_H__
+
 EMPTYLINE
 PRAGMA include <cstdint>
 EMPTYLINE
-/*
-PRAGMA if defined(_MSC_VER)
-PRAGMA define XSS_DLL_IMPORT __declspec(dllimport)  // cpp transforms __declspec(dllimport) to __attribute__((dllimport))
-PRAGMA elif defined(__MINGW64__)
-PRAGMA define XSS_DLL_IMPORT __attribute__((dllimport))
-PRAGMA else
-PRAGMA define XSS_DLL_IMPORT
-PRAGMA endif
-*/
+
 PRAGMA define XSS_DLL_IMPORT
 
 #include "c-api-headers.h"
 
 EMPTYLINE
 COMMENT DLL import declarations
-extern "C"
-{
+
+PRAGMA ifdef __cplusplus
+extern "C" {
+PRAGMA endif
 #include "c-api-export.h"
+PRAGMA ifdef __cplusplus
 } COMMENT extern "C"
+PRAGMA endif
 
 EMPTYLINE
-COMMENT Dispatchers with identical names using C overloads
+PRAGMA ifdef __cplusplus
+COMMENT C++ overloaded dispatchers
 namespace xss
 {
 
@@ -55,4 +54,7 @@ namespace xss
 #include "c-api-x-macro2.h"
 
 } COMMENT namespace xss
- EMPTYLINE
+ 
+PRAGMA endif COMMENT ifdef __cplusplus
+EMPTYLINE
+PRAGMA endif COMMENT ifndef __X86_SIMD_SORT_C_API_H__
