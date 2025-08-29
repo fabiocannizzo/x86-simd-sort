@@ -36,23 +36,27 @@ else ifneq (,$(filter Linux%,$(UNAME)))
 endif
 
 ifeq ($(TARGET),DLL)
+    STATIC = -static-libstdc++
     # We prefer CLANG, because there ia a bug in gcc when the target is the Windows ABI
     # A function call passing by value AVX registers segfaults
     # https://github.com/mingw-w64/mingw-w64/issues/115
     ifeq ($(CYGWIN),1)
-       CXX := x86_64-w64-mingw32-clang++
+       #CXX := x86_64-w64-mingw32-clang++
+       CXX := clang++ --target=x86_64-w64-mingw32  # --gcc-toolchain=/usr/x86_64-w64-mingw32
+       STATIC += -static -pthread
     else ifeq ($(MINGW),1)
        CXX := clang++
+       STATIC += -static -lpthread
     else ifeq ($(LINUX),1)
        CXX := clang++ --target=x86_64-w64-mingw32  # --gcc-toolchain=/usr/x86_64-w64-mingw32
-       LDFLAGS += --gcc-toolchain=/usr/x86_64-w64-mingw32
+       # LDFLAGS += --gcc-toolchain=/usr/x86_64-w64-mingw32
+       STATIC += -static -pthread
     else
         $(error DLL cross compilation supported on CYGWIN (with x86_64-w64-mingw32-clang++), MINGW64 (with clang++ and mingw) and Linux (with clang++ and mingw))
     endif
     SHARED_EXT := dll
     LIBNAME := $(NAME)-c-api
     DLLLINK := $(LIBNAME).$(SHARED_EXT).lib
-    STATIC := -static-libstdc++ -static -lpthread -static -pthread
     LDFLAGS += -shared -static-libgcc $(STATIC) -Wl,--out-implib,$(DLLLINK)
     SONAME_FLAG :=
 else
