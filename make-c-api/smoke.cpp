@@ -199,7 +199,7 @@ struct Sorter<NTH, A, T, Descend, std::enable_if_t<A == SIMD || A == STL>>
                 j = std::distance(X.begin(), itRight);
             }
         }
-        
+
         if (error) {
             std::cout << sortMsg<T>(NTH, A, Descend)
                       << violation(X, i, j, Descend)
@@ -506,9 +506,9 @@ void benchmark()
               << ", Order: " << (Descend ? "descending" : "ascending") << "\n"; \
 
     constexpr size_t max_exp = 20;
-    for (size_t _n = 4; _n <= 1<<18; _n *= 2) {
-        size_t m = std::min<size_t>(std::max<size_t>((1 << max_exp) / _n, 4), 200);
-        for (auto n : {_n, _n + 1}) {
+    for (size_t _n = 4; _n <= 1<<20; _n *= 2) {
+        size_t m = std::min<size_t>(std::max<size_t>((1 << max_exp) / _n, 2), 200);
+        for (auto n : {_n, 3*_n/2}) {
 
             std::vector<T> X(n), Xcopy(n);
             std::vector<uint32_t> J(n);
