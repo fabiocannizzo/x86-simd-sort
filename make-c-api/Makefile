@@ -14,59 +14,62 @@ else
     CXXFLAGS += -O3
 endif
 
-CXXLIBFLAGS := -I../lib -I../src -I../utils -fvisibility=hidden -fvisibility-inlines-hidden # -D_FILE_OFFSET_BITS=64
+CXXLIBFLAGS := -I../lib -I../src -I../utils -fvisibility=hidden -fvisibility-inlines-hidden
 
 NAME := x86simdsort
 
 UNAME := $(shell uname)
 $(info UNAME: $(UNAME))
-CYGWIN := 0
-MINGW := 0
-LINUX := 0
 
+# Detect host system
 ifneq (,$(filter CYGWIN%,$(UNAME)))
-   CYGWIN := 1
-   $(info Host OS: Cygwin)
+    HOST := CYGWIN
 else ifneq (,$(filter MINGW64%,$(UNAME)))
-   MINGW := 1
-   $(info Host OS: Mingw)
+    HOST := MINGW
 else ifneq (,$(filter Linux%,$(UNAME)))
-   $(info Host OS: Linux)
-   LINUX := 1
+    HOST := LINUX
+else
+    $(error Unknown host system: $(UNAME))
 endif
+$(info Host: $(HOST))
 
-ifeq ($(TARGET),DLL)
-    STATIC = -static-libstdc++
-    # We prefer CLANG, because there ia a bug in gcc when the target is the Windows ABI
-    # A function call passing by value AVX registers segfaults
-    # https://github.com/mingw-w64/mingw-w64/issues/115
-    ifeq ($(CYGWIN),1)
-       #CXX := x86_64-w64-mingw32-clang++
-       CXX := clang++ --target=x86_64-w64-mingw32  # --gcc-toolchain=/usr/x86_64-w64-mingw32
-       STATIC += -static -pthread
-    else ifeq ($(MINGW),1)
-       CXX := clang++
-       STATIC += -static -lpthread
-    else ifeq ($(LINUX),1)
-       CXX := clang++ --target=x86_64-w64-mingw32  # --gcc-toolchain=/usr/x86_64-w64-mingw32
-       # LDFLAGS += --gcc-toolchain=/usr/x86_64-w64-mingw32
-       STATIC += -static -pthread
-    else
-        $(error DLL cross compilation supported on CYGWIN (with x86_64-w64-mingw32-clang++), MINGW64 (with clang++ and mingw) and Linux (with clang++ and mingw))
-    endif
+ifneq (,$(findstring DLL,$(TARGET)))
     SHARED_EXT := dll
     LIBNAME := $(NAME)-c-api
     DLLLINK := $(LIBNAME).$(SHARED_EXT).lib
-    LDFLAGS += -shared -static-libgcc $(STATIC) -Wl,--out-implib,$(DLLLINK)
-    SONAME_FLAG :=
+
+    # We prefer CLANG, because there ia a bug in gcc when the target is the Windows ABI
+    # A function call passing by value AVX registers segfaults
+    # https://github.com/mingw-w64/mingw-w64/issues/115
+    CXX = clang++
+    LDFLAGS += -shared -Wl,--out-implib,$(DLLLINK)
+
+    ifeq ($(TARGET),DLL)
+        $(info Building a DLL with MinGW)
+        CXX += --target=x86_64-w64-mingw32
+        STATIC = -static-libstdc++ -static-libgcc
+        ifeq ($(HOST),CYGWIN)
+           LDFLAGS += -static -pthread
+        else ifeq ($(HOST),MINGW)
+           LDFLAGS += -static -lpthread
+        else ifeq ($(HOST),LINUX)
+           LDFLAGS += -static -pthread
+        else
+            $(error DLL cross compilation supported on CYGWIN (with x86_64-w64-mingw32-clang++), MINGW64 (with clang++ and mingw) and Linux (with clang++ and mingw))
+        endif
+    else
+        $(error Invalid target for DLL compilation: $(TARGET))
+    endif
 else
-    ifeq ($(CYGWIN),1)
+    ifeq ($(HOST),CYGWIN)
        # We prefer CLANG, because there ia a bug in gcc when the target is the Windows ABI
        # A function call passing by value AVX registers segfaults
        # https://github.com/mingw-w64/mingw-w64/issues/115
        CXX := clang++
+    else ifeq ($(HOST),LINUX)
+       CXX := g++ 
     else
-       CXX := g++
+       $(error Invalid host system for SO compilation: $(HOST))
     endif
     SHARED_EXT := so
     LIBNAME := lib$(NAME)-c-api
